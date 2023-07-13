@@ -17,13 +17,13 @@ const Image = require('./models/image.model')
 
 const app = express()
 app.use(cors());
-app.use(function (req, res, next) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    next();
-});
+// app.use(function (req, res, next) {
+//     res.setHeader('Access-Control-Allow-Origin', '*');
+//     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+//     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+//     res.setHeader('Access-Control-Allow-Credentials', true);
+//     next();
+// });
 app.use(express.json())
 
 dotenv.config('./.env');
@@ -48,7 +48,6 @@ const otp = speakeasy.totp({
 app.post('/api/register', async (req, res) => {
 
     console.log(req.body)
-
     try {
         const hashedPassword = await bcrypt.hash(req.body.password, 10)
         await User.create({
@@ -101,62 +100,67 @@ app.post('/api/login', async (req, res) => {
 
 app.post('/api/sendOtp', async (req, res) => {
 
-    let transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: otpLoginEmail,
-            pass: otpLoginpPassword
-        },
-        tls: {
-            rejectUnauthorized: false
-        }
-    });
+    // let transporter = nodemailer.createTransport({
+    //     service: 'gmail',
+    //     auth: {
+    //         user: otpLoginEmail,
+    //         pass: otpLoginpPassword
+    //     },
+    //     tls: {
+    //         rejectUnauthorized: false
+    //     }
+    // });
 
-    let mailOptions = {
-        from: '"Breast Cancer Prediction" <bc.predict@gmail.com>',
-        to: req.body.email,
-        subject: 'Account Creation',
-        text: "You have recently created an account with us.\nYour Verification OTP is " + otp + "\nIf you haven't made an account please contact site administrator."
-    };
+    // let mailOptions = {
+    //     from: '"Breast Cancer Prediction" <bc.predict@gmail.com>',
+    //     to: req.body.email,
+    //     subject: 'Account Creation',
+    //     text: "You have recently created an account with us.\nYour Verification OTP is " + otp + "\nIf you haven't made an account please contact site administrator."
+    // };
 
-    transporter.sendMail(mailOptions, async (error, info) => {
-        if (error) {
-            console.log(error);
-            res.json({ code: 'wrong_email' })
-        }
-        else {
-            // otp.create({ email: req.body.email_phone, otp: new_pass, flag: false, name: req.body.name, insti: req.body.insti, role: req.body.role }).then(val => {
-            //     res.json({ code: 'successful_email', temp: val._id });
-            // });
-            try {
-                await Otp.create({
-                    email: req.body.email,
-                    mobile: req.body.phone,
-                    otp: otp,
-                })
-                res.json({
-                    status: 'true'
-                })
-            } catch (err) {
-                console.log(err)
-                res.json({
-                    status: 'Error',
-                })
-            }
-        }
+    // transporter.sendMail(mailOptions, async (error, info) => {
+    //     if (error) {
+    //         console.log(error);
+    //         res.json({ code: 'wrong_email' })
+    //     }
+    //     else {
+    //         // otp.create({ email: req.body.email_phone, otp: new_pass, flag: false, name: req.body.name, insti: req.body.insti, role: req.body.role }).then(val => {
+    //         //     res.json({ code: 'successful_email', temp: val._id });
+    //         // });
+    //         try {
+    //             await Otp.create({
+    //                 email: req.body.email,
+    //                 mobile: req.body.phone,
+    //                 otp: otp,
+    //             })
+    //             res.json({
+    //                 status: 'true'
+    //             })
+    //         } catch (err) {
+    //             console.log(err)
+    //             res.json({
+    //                 status: 'Error',
+    //             })
+    //         }
+    //     }
+    // })
+
+    res.json({
+        status: 'true'
     })
 })
 
 app.post('/api/verify', async (req, res) => {
 
-    let { email, otp } = req.body;
-    const OTP = await Otp.findOne({ 'email': email, });
-    if (OTP.otp === otp) {
-        res.status(201).json({ status: "true" });
-    } else {
-        res.status(201).json({ status: "false" });
-    }
+    // let { email, otp } = req.body;
+    // const OTP = await Otp.findOne({ 'email': email, });
+    // if (OTP.otp === otp) {
+    //     res.status(201).json({ status: "true" });
+    // } else {
+    //     res.status(201).json({ status: "false" });
+    // }
 
+    res.status(201).json({ status: "true" });
 })
 
 //express code for image upload
