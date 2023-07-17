@@ -34,6 +34,8 @@ const mongoURL = process.env.MONGO_URL;
 const otpLoginEmail = process.env.OTP_LOGIN_EMAIL;
 const otpLoginpPassword = process.env.OTP_LOGIN_PASSWORD;
 
+console.log(port, secretKey, mongoURL, otpLoginEmail, otpLoginpPassword)
+
 mongoose.connect(mongoURL)
     .then(() => console.log('MongoDB Connected'))
     .catch(err => console.log(err));
@@ -46,7 +48,6 @@ const otp = speakeasy.totp({
 
 
 app.post('/api/register', async (req, res) => {
-
     console.log(req.body)
     try {
         const hashedPassword = await bcrypt.hash(req.body.password, 10)
@@ -68,6 +69,7 @@ app.post('/api/register', async (req, res) => {
 })
 
 app.post('/api/login', async (req, res) => {
+    console.log("login called")
     const user = await User.findOne({
         email: req.body.email,
     })
@@ -99,73 +101,69 @@ app.post('/api/login', async (req, res) => {
 })
 
 app.post('/api/sendOtp', async (req, res) => {
+    console.log("sendOtp called")
+    let transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: otpLoginEmail,
+            pass: otpLoginpPassword
+        },
+        tls: {
+            rejectUnauthorized: false
+        }
+    });
 
-    // let transporter = nodemailer.createTransport({
-    //     service: 'gmail',
-    //     auth: {
-    //         user: otpLoginEmail,
-    //         pass: otpLoginpPassword
-    //     },
-    //     tls: {
-    //         rejectUnauthorized: false
-    //     }
-    // });
+    let mailOptions = {
+        from: '"Breast Cancer Prediction" <bc.predict@gmail.com>',
+        to: req.body.email,
+        subject: 'Account Creation',
+        text: "You have recently created an account with us.\nYour Verification OTP is " + otp + "\nIf you haven't made an account please contact site administrator."
+    };
 
-    // let mailOptions = {
-    //     from: '"Breast Cancer Prediction" <bc.predict@gmail.com>',
-    //     to: req.body.email,
-    //     subject: 'Account Creation',
-    //     text: "You have recently created an account with us.\nYour Verification OTP is " + otp + "\nIf you haven't made an account please contact site administrator."
-    // };
-
-    // transporter.sendMail(mailOptions, async (error, info) => {
-    //     if (error) {
-    //         console.log(error);
-    //         res.json({ code: 'wrong_email' })
-    //     }
-    //     else {
-    //         // otp.create({ email: req.body.email_phone, otp: new_pass, flag: false, name: req.body.name, insti: req.body.insti, role: req.body.role }).then(val => {
-    //         //     res.json({ code: 'successful_email', temp: val._id });
-    //         // });
-    //         try {
-    //             await Otp.create({
-    //                 email: req.body.email,
-    //                 mobile: req.body.phone,
-    //                 otp: otp,
-    //             })
-    //             res.json({
-    //                 status: 'true'
-    //             })
-    //         } catch (err) {
-    //             console.log(err)
-    //             res.json({
-    //                 status: 'Error',
-    //             })
-    //         }
-    //     }
-    // })
-
-    res.json({
-        status: 'true'
+    transporter.sendMail(mailOptions, async (error, info) => {
+        if (error) {
+            console.log(error);
+            res.json({ code: 'wrong_email' })
+        }
+        else {
+            // otp.create({ email: req.body.email_phone, otp: new_pass, flag: false, name: req.body.name, insti: req.body.insti, role: req.body.role }).then(val => {
+            //     res.json({ code: 'successful_email', temp: val._id });
+            // });
+            try {
+                await Otp.create({
+                    email: req.body.email,
+                    mobile: req.body.phone,
+                    otp: otp,
+                })
+                res.json({
+                    status: 'true'
+                })
+            } catch (err) {
+                console.log(err)
+                res.json({
+                    status: 'Error',
+                })
+            }
+        }
     })
 })
 
 app.post('/api/verify', async (req, res) => {
+    console.log("verify called")
+    let { email, otp } = req.body;
+    const OTP = await Otp.findOne({ 'email': email, });
+    if (OTP.otp === otp) {
+        res.status(201).json({ status: "true" });
+    } else {
+        res.status(201).json({ status: "false" });
+    }
 
-    // let { email, otp } = req.body;
-    // const OTP = await Otp.findOne({ 'email': email, });
-    // if (OTP.otp === otp) {
-    //     res.status(201).json({ status: "true" });
-    // } else {
-    //     res.status(201).json({ status: "false" });
-    // }
-
-    res.status(201).json({ status: "true" });
+    // res.status(201).json({ status: "true" });
 })
 
 //express code for image upload
 app.post('/api/uploadImage', (req, res) => {
-
+    console.log("uploadImage called");
     const newImage = new Image({
         username: req.body.username,
         img: req.body.image,
@@ -187,10 +185,10 @@ app.post('/api/uploadImage', (req, res) => {
 )
 
 app.post('/api/fetchImage', async (req, res) => {
+    console.log("fetchImage called")
     try {
         console.log(req.body.username)
         const images = await Image.find({ username: req.body.username });
-        console.log(images);
         if (!images) {
             return res.status(404).json({ error: "No images found" });
         }
