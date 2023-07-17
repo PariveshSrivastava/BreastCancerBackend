@@ -34,8 +34,6 @@ const mongoURL = process.env.MONGO_URL;
 const otpLoginEmail = process.env.OTP_LOGIN_EMAIL;
 const otpLoginpPassword = process.env.OTP_LOGIN_PASSWORD;
 
-console.log(port, secretKey, mongoURL, otpLoginEmail, otpLoginpPassword)
-
 mongoose.connect(mongoURL)
     .then(() => console.log('MongoDB Connected'))
     .catch(err => console.log(err));
